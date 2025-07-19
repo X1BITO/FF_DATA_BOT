@@ -1,55 +1,67 @@
-import os
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, CallbackQueryHandler
 import random
-import telebot
-import time
+import os
 
-BOT_TOKEN = os.getenv("BOT_TOKEN", "7773135647:AAHatUWgheGaBRDWKovpzEqR23bEBbzZAqE")
-bot = telebot.TeleBot(BOT_TOKEN)
+TOKEN = os.getenv("BOT_TOKEN") or "7773135647:AAHatUWgheGaBRDWKovpzEqR23bEBbzZAqE"
 
-OWNER = "@GhostzDK"
-BUNDLES = ["Cobra", "Joker", "Angelic", "Hip Hop", "Sakura", "Elite Pass", "Gold Dress"]
+# BGMI-style Free Fire Data Generator
+def generate_data(count):
+    uid_start = 1000000000
+    data_list = []
+    for _ in range(count):
+        uid = str(uid_start + random.randint(10000, 99999))
+        level = random.randint(50, 85)
+        bundle = random.choice(["HipHop", "Sultan", "Cobra", "Venom", "Alok"])
+        email = f"user{random.randint(1000,9999)}@gmail.com"
+        password = f"pass{random.randint(1000,9999)}"
+        data = f"""╭─────────────⭓
+├ UID: {uid}
+├ Level: {level}
+├ Email: {email}
+├ Password: {password}
+├ Bundle: {bundle}
+╰─────────────⭓"""
+        data_list.append(data)
+    return "\n\n".join(data_list)
 
-def generate_data():
-    uid = str(random.randint(4000000000, 4999999999))
-    level = random.randint(40, 75)
-    email_number = str(random.randint(7000000000, 9999999999))
-    password = "jack999"
-    bundles = " + ".join(random.sample(BUNDLES, 3))
-    return f"""🔥 𝔄𝔄𝔊𝔜𝔄 𝔇𝔄𝔗𝔄 🔥  
-📛 𝕌𝕀𝔻: {uid}  
-📶 𝕃𝕠𝕘𝕚𝕟: 𝔽𝕒𝕔𝕖𝕓𝕠𝕠𝕜  
-🎮 𝕃𝕖𝕧𝕖𝕝: {level}  
+# /start command
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    keyboard = [
+        [InlineKeyboardButton("Generate 10", callback_data="gen_10")],
+        [InlineKeyboardButton("Generate 20", callback_data="gen_20")],
+        [InlineKeyboardButton("Generate 30", callback_data="gen_30")],
+        [InlineKeyboardButton("Generate 40", callback_data="gen_40")],
+        [InlineKeyboardButton("Generate 50", callback_data="gen_50")],
+        [InlineKeyboardButton("Generate 100", callback_data="gen_100")],
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.message.reply_text("👑 Welcome to Free Fire Data Generator Bot 👑\n\nSelect how many entries you want to generate:", reply_markup=reply_markup)
 
-🎯 𝔼𝕄𝔸𝕀𝕃 - {email_number}  
-𝙋𝘼𝙎𝙎𝙒𝙊𝙍𝘿 - {password}  
+# /support command
+async def support(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("📞 Contact our team:\n@GhostzDK")
 
-👕 𝔹𝕦𝕟𝕕𝕝𝕖𝕤: {bundles}  
+# Button handling
+async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
 
-𝔻𝔸𝕋𝔸 ℙ𝕆𝕎𝔼ℝ - 💀Ghost web💀  
+    count = int(query.data.split("_")[1])
+    await query.message.reply_text("⚡ Generating data...")
+    result = generate_data(count)
+    await query.message.reply_text(result)
 
-🚨 𝕁𝔸𝕃𝔻𝕀 𝕁𝔸𝕃𝔻𝕀 𝕀𝔻 ℂℍ𝔼ℂ𝕂 𝕂𝔸ℝ𝕆 🚨  
+# Main bot setup
+def main():
+    app = ApplicationBuilder().token(TOKEN).build()
 
-👑 𝕆𝕎ℕ𝔼ℝ - {OWNER}"""
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("support", support))
+    app.add_handler(CallbackQueryHandler(button_handler))
 
-@bot.message_handler(commands=['start'])
-def send_welcome(message):
-    bot.reply_to(message, "Welcome to FF Data Generator Bot")
-Use /generate 10 or 20 or 50 to get FF data.
-Use /support to contact owner.")
+    print("Bot is running...")
+    app.run_polling()
 
-@bot.message_handler(commands=['support'])
-def support(message):
-    bot.reply_to(message, "👑 Contact Owner: @GhostzDK")
-
-@bot.message_handler(commands=['generate'])
-def generate(message):
-    try:
-        count = int(message.text.split()[1])
-        if count > 100: count = 100
-        for _ in range(count):
-            bot.send_message(message.chat.id, generate_data())
-            time.sleep(1)
-    except:
-        bot.reply_to(message, "⚠️ Use command like: /generate 10, /generate 50 etc.")
-
-bot.polling()
+if __name__ == "__main__":
+    main()
