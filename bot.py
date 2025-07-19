@@ -1,56 +1,72 @@
-from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+import logging
 import random
+import string
+from aiogram import Bot, Dispatcher, executor, types
 
-TOKEN = "7773135647:AAHatUWgheGaBRDWKovpzEqR23bEBbzZAqE"  # Replace with your actual bot token
+API_TOKEN = '7773135647:AAHatUWgheGaBRDWKovpzEqR23bEBbzZAqE'
+
+# Enable logging
+logging.basicConfig(level=logging.INFO)
+bot = Bot(token=API_TOKEN)
+dp = Dispatcher(bot)
 
 # Start command
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Welcome to Free Fire ID Generator Bot!\nUse /generate10, /generate20, /generate50 etc.")
+@dp.message_handler(commands=['start'])
+async def start(message: types.Message):
+    await message.reply(
+        "👋 Welcome to the GHOST WEB Free Fire Data Generator!\n\n"
+        "⚙ Use /generate <10|20|30|40|50|100> to get Free Fire data.\n"
+        "❓ Need help? Use /support"
+    )
 
 # Support command
-async def support(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("For support, contact @GhostzDK")
+@dp.message_handler(commands=['support'])
+async def support(message: types.Message):
+    await message.reply("👨‍💻 Contact @GhostzDK for support.")
 
-# Data Generator
-def generate_data(count):
-    results = []
-    for _ in range(count):
-        uid = str(random.randint(1000000000, 9999999999))
-        level = random.randint(10, 80)
-        bundle = random.choice(["HipHop", "Skull", "COBRa", "White444", "Alok", "DJ", "K Character", "Dragon AK"])
-        data = f"UID: {uid}\nLevel: {level}\nBundles: {bundle}\nLogin: Facebook\nEmail: {uid}@gmail.com\nPassword: ghost123\n━━━━━━━━━━━━━━"
-        results.append(data)
-    return "\n".join(results)
+# Generator logic
+def generate_ff_data(amount):
+    entries = []
+    for _ in range(amount):
+        uid = ''.join(random.choices(string.digits, k=9))
+        level = random.randint(45, 80)
+        email = ''.join(random.choices(string.ascii_lowercase + string.digits, k=8)) + "@gmail.com"
+        password = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
+        bundle = random.choice(["Hip Hop", "Sakura", "Criminal", "Cobra", "Galaxy Dino", "None"])
 
-# Generate Command
-async def generate(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if len(context.args) != 1 or not context.args[0].isdigit():
-        await update.message.reply_text("Usage: /generate10 or /generate20 or /generate50")
-        return
+        entry = f"""🔰 𝗚𝗛𝗢𝗦𝗧 𝗪𝗘𝗕 🔰
+👤 UID: `{uid}`
+📶 LEVEL: `{level}`
+📩 EMAIL: `{email}`
+🔑 PASSWORD: `{password}`
+🎒 BUNDLE: `{bundle}`
+━━━━━━━━━━━━━━━
+🌀 JALDI JALDI ID CHECK KARO
+👑 OWNER - @GhostzDK
+━━━━━━━━━━━━━━━"""
+        entries.append(entry)
+    return "\n\n".join(entries)
 
-    count = int(context.args[0])
-    if count not in [10, 20, 30, 40, 50, 100]:
-        await update.message.reply_text("Only allowed: 10, 20, 30, 40, 50, 100")
-        return
+# Split large message
+def split_message(text, chunk_size=4000):
+    return [text[i:i+chunk_size] for i in range(0, len(text), chunk_size)]
 
-    await update.message.reply_text(generate_data(count))
+# Generate command
+@dp.message_handler(commands=['generate'])
+async def generate(message: types.Message):
+    try:
+        count = int(message.get_args())
+        if count not in [10, 20, 30, 40, 50, 100]:
+            await message.reply("❌ Use only: 10, 20, 30, 40, 50, or 100")
+            return
+        await message.reply("⚙ Generating data, please wait...")
+        data = generate_ff_data(count)
+        for chunk in split_message(data):
+            await message.answer(chunk, parse_mode="Markdown")
+    except Exception as e:
+        await message.reply(f"❌ Error occurred: {e}")
 
-# Main function
-def main():
-    app = ApplicationBuilder().token(TOKEN).build()
+# Run the bot
+if __name__ == '__main__':
+    executor.start_polling(dp, skip_updates=True)
 
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("support", support))
-    app.add_handler(CommandHandler("generate10", lambda u, c: generate(u, c,)))
-    app.add_handler(CommandHandler("generate20", lambda u, c: generate(u, c,)))
-    app.add_handler(CommandHandler("generate30", lambda u, c: generate(u, c,)))
-    app.add_handler(CommandHandler("generate40", lambda u, c: generate(u, c,)))
-    app.add_handler(CommandHandler("generate50", lambda u, c: generate(u, c,)))
-    app.add_handler(CommandHandler("generate100", lambda u, c: generate(u, c,)))
-
-    print("Bot is running...")
-    app.run_polling()
-
-if __name__ == "__main__":
-    main()
