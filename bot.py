@@ -33,7 +33,7 @@ def generate_data():
 
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
-    bot.reply_to(message, "Welcome to FF Data Generator Bot 💀
+    bot.reply_to(message, "Welcome to FF Data Generator Bot")
 Use /generate 10 or 20 or 50 to get FF data.
 Use /support to contact owner.")
 
