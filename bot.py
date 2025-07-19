@@ -1,65 +1,56 @@
-import telegram
 from telegram import Update
-from telegram.ext import Updater, CommandHandler, CallbackContext
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 import random
 
-# ⚙️ Your bot token
-TOKEN = "7773135647:AAHatUWgheGaBRDWKovpzEqR23bEBbzZAqE"
+TOKEN = "7773135647:AAHatUWgheGaBRDWKovpzEqR23bEBbzZAqE"  # Replace with your actual bot token
 
-# 🧠 Random data generator
-def generate_data(count: int) -> str:
-    data_list = []
+# Start command
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Welcome to Free Fire ID Generator Bot!\nUse /generate10, /generate20, /generate50 etc.")
+
+# Support command
+async def support(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("For support, contact @GhostzDK")
+
+# Data Generator
+def generate_data(count):
+    results = []
     for _ in range(count):
-        uid = random.randint(1000000000, 9999999999)
-        level = random.randint(35, 80)
-        bundle = random.choice(["HipHop", "Sakura", "Cobra", "Alok", "Criminal", "None"])
-        email = f"user{random.randint(1000,9999)}@gmail.com"
-        password = f"{random.randint(100000,999999)}"
-        entry = f"👤 UID: {uid}\n📊 Level: {level}\n🎒 Bundle: {bundle}\n📧 Email: {email}\n🔐 Password: {password}"
-        data_list.append(entry)
-    return "\n\n".join(data_list)
+        uid = str(random.randint(1000000000, 9999999999))
+        level = random.randint(10, 80)
+        bundle = random.choice(["HipHop", "Skull", "COBRa", "White444", "Alok", "DJ", "K Character", "Dragon AK"])
+        data = f"UID: {uid}\nLevel: {level}\nBundles: {bundle}\nLogin: Facebook\nEmail: {uid}@gmail.com\nPassword: ghost123\n━━━━━━━━━━━━━━"
+        results.append(data)
+    return "\n".join(results)
 
-# 🎮 /start command
-def start(update: Update, context: CallbackContext):
-    update.message.reply_text(
-        "👋 Welcome to *Ghost Web Free Fire Data Generator*!\n\n"
-        "Use /gen10, /gen20, /gen50, or /gen100 to generate data.\n"
-        "Need help? Use /support",
-        parse_mode="Markdown"
-    )
+# Generate Command
+async def generate(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if len(context.args) != 1 or not context.args[0].isdigit():
+        await update.message.reply_text("Usage: /generate10 or /generate20 or /generate50")
+        return
 
-# 🛠 Support command
-def support(update: Update, context: CallbackContext):
-    update.message.reply_text("📞 Support: @GhostzDK")
+    count = int(context.args[0])
+    if count not in [10, 20, 30, 40, 50, 100]:
+        await update.message.reply_text("Only allowed: 10, 20, 30, 40, 50, 100")
+        return
 
-# 📦 Data generation commands
-def gen10(update: Update, context: CallbackContext):
-    update.message.reply_text(generate_data(10))
+    await update.message.reply_text(generate_data(count))
 
-def gen20(update: Update, context: CallbackContext):
-    update.message.reply_text(generate_data(20))
-
-def gen50(update: Update, context: CallbackContext):
-    update.message.reply_text(generate_data(50))
-
-def gen100(update: Update, context: CallbackContext):
-    update.message.reply_text(generate_data(100))
-
-# 🚀 Main function
+# Main function
 def main():
-    updater = Updater(TOKEN)
-    dp = updater.dispatcher
+    app = ApplicationBuilder().token(TOKEN).build()
 
-    # Add handlers
-    dp.add_handler(CommandHandler("start", start))
-    dp.add_handler(CommandHandler("support", support))
-    dp.add_handler(CommandHandler("gen10", gen10))
-    dp.add_handler(CommandHandler("gen20", gen20))
-    dp.add_handler(CommandHandler("gen50", gen50))
-    dp.add_handler(CommandHandler("gen100", gen100))
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("support", support))
+    app.add_handler(CommandHandler("generate10", lambda u, c: generate(u, c,)))
+    app.add_handler(CommandHandler("generate20", lambda u, c: generate(u, c,)))
+    app.add_handler(CommandHandler("generate30", lambda u, c: generate(u, c,)))
+    app.add_handler(CommandHandler("generate40", lambda u, c: generate(u, c,)))
+    app.add_handler(CommandHandler("generate50", lambda u, c: generate(u, c,)))
+    app.add_handler(CommandHandler("generate100", lambda u, c: generate(u, c,)))
 
-    updater.start_polling()
-    updater.idle()
+    print("Bot is running...")
+    app.run_polling()
 
 if __name__ == "__main__":
     main()
