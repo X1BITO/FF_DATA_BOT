@@ -1,67 +1,46 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, CallbackQueryHandler
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 import random
-import os
 
-TOKEN = os.getenv("BOT_TOKEN") or "7773135647:AAHatUWgheGaBRDWKovpzEqR23bEBbzZAqE"
+TOKEN = "YOUR_BOT_TOKEN_HERE"  # replace with your token
 
-# BGMI-style Free Fire Data Generator
-def generate_data(count):
-    uid_start = 1000000000
+# Sample Free Fire UID Data Generator
+def generate_ff_data(count: int):
+    bundles = ['Hip Hop', 'Cobra', 'Sakura', 'DJ Alok', 'Criminal']
     data_list = []
     for _ in range(count):
-        uid = str(uid_start + random.randint(10000, 99999))
-        level = random.randint(50, 85)
-        bundle = random.choice(["HipHop", "Sultan", "Cobra", "Venom", "Alok"])
-        email = f"user{random.randint(1000,9999)}@gmail.com"
-        password = f"pass{random.randint(1000,9999)}"
-        data = f"""╭─────────────⭓
-├ UID: {uid}
-├ Level: {level}
-├ Email: {email}
-├ Password: {password}
-├ Bundle: {bundle}
-╰─────────────⭓"""
+        uid = random.randint(1000000000, 9999999999)
+        level = random.randint(30, 80)
+        bundle = random.choice(bundles)
+        email = f"user{uid}@gmail.com"
+        password = f"{uid}@ff"
+        data = f"📛 UID: {uid}\n📶 Level: {level}\n🎒 Bundle: {bundle}\n📧 Email: {email}\n🔐 Password: {password}"
         data_list.append(data)
     return "\n\n".join(data_list)
 
-# /start command
+# Command: /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    keyboard = [
-        [InlineKeyboardButton("Generate 10", callback_data="gen_10")],
-        [InlineKeyboardButton("Generate 20", callback_data="gen_20")],
-        [InlineKeyboardButton("Generate 30", callback_data="gen_30")],
-        [InlineKeyboardButton("Generate 40", callback_data="gen_40")],
-        [InlineKeyboardButton("Generate 50", callback_data="gen_50")],
-        [InlineKeyboardButton("Generate 100", callback_data="gen_100")],
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text("👑 Welcome to Free Fire Data Generator Bot 👑\n\nSelect how many entries you want to generate:", reply_markup=reply_markup)
+    await update.message.reply_text(
+        "👻 Welcome to Ghost Web FF Data Bot\n\nUse /gen10, /gen20, /gen50 or /gen100 to generate data.\nUse /support for help."
+    )
 
-# /support command
+# Command: /support
 async def support(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("📞 Contact our team:\n@GhostzDK")
+    await update.message.reply_text("🛠 Support: @GhostzDK")
 
-# Button handling
-async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
+# Command: /gen10, /gen20, /gen50, /gen100
+async def generate(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    count = int(update.message.text.replace("/gen", ""))
+    result = generate_ff_data(count)
+    await update.message.reply_text(result)
 
-    count = int(query.data.split("_")[1])
-    await query.message.reply_text("⚡ Generating data...")
-    result = generate_data(count)
-    await query.message.reply_text(result)
-
-# Main bot setup
-def main():
-    app = ApplicationBuilder().token(TOKEN).build()
-
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("support", support))
-    app.add_handler(CallbackQueryHandler(button_handler))
-
-    print("Bot is running...")
-    app.run_polling()
+app = ApplicationBuilder().token(TOKEN).build()
+app.add_handler(CommandHandler("start", start))
+app.add_handler(CommandHandler("support", support))
+app.add_handler(CommandHandler("gen10", generate))
+app.add_handler(CommandHandler("gen20", generate))
+app.add_handler(CommandHandler("gen50", generate))
+app.add_handler(CommandHandler("gen100", generate))
 
 if __name__ == "__main__":
-    main()
+    app.run_polling()
