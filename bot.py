@@ -1,84 +1,65 @@
-import logging
+import telegram
+from telegram import Update
+from telegram.ext import Updater, CommandHandler, CallbackContext
 import random
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import ApplicationBuilder, CommandHandler, CallbackContext, ContextTypes
 
-# Enable logging
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
-)
-logger = logging.getLogger(__name__)
+# ⚙️ Your bot token
+TOKEN = "7773135647:AAHatUWgheGaBRDWKovpzEqR23bEBbzZAqE"
 
-TOKEN = "7773135647:AAHatUWgheGaBRDWKovpzEqR23bEBbzZAqE"  # Replace this with your actual bot token
+# 🧠 Random data generator
+def generate_data(count: int) -> str:
+    data_list = []
+    for _ in range(count):
+        uid = random.randint(1000000000, 9999999999)
+        level = random.randint(35, 80)
+        bundle = random.choice(["HipHop", "Sakura", "Cobra", "Alok", "Criminal", "None"])
+        email = f"user{random.randint(1000,9999)}@gmail.com"
+        password = f"{random.randint(100000,999999)}"
+        entry = f"👤 UID: {uid}\n📊 Level: {level}\n🎒 Bundle: {bundle}\n📧 Email: {email}\n🔐 Password: {password}"
+        data_list.append(entry)
+    return "\n\n".join(data_list)
 
-SUPPORT_LINK = "https://t.me/GhostzDK"
+# 🎮 /start command
+def start(update: Update, context: CallbackContext):
+    update.message.reply_text(
+        "👋 Welcome to *Ghost Web Free Fire Data Generator*!\n\n"
+        "Use /gen10, /gen20, /gen50, or /gen100 to generate data.\n"
+        "Need help? Use /support",
+        parse_mode="Markdown"
+    )
 
-def generate_ff_data():
-    uid = str(random.randint(1000000000, 9999999999))
-    level = random.randint(20, 85)
-    email = f"user{random.randint(1000,9999)}@gmail.com"
-    password = f"{random.randint(100000,999999)}"
-    bundle = random.choice(["Hip Hop", "Sakura", "Cobra", "DJ Alok", "One Punch", "Criminal Red", "Wukong"])
+# 🛠 Support command
+def support(update: Update, context: CallbackContext):
+    update.message.reply_text("📞 Support: @GhostzDK")
 
-    return f"""
-👤 UID: {uid}
-🎮 Level: {level}
-📧 Email: {email}
-🔐 Password: {password}
-🎁 Bundle: {bundle}
-    """
+# 📦 Data generation commands
+def gen10(update: Update, context: CallbackContext):
+    update.message.reply_text(generate_data(10))
 
-def generate_bgmi_data():
-    uid = str(random.randint(5000000000, 5999999999))
-    level = random.randint(25, 75)
-    email = f"bgmi{random.randint(1000,9999)}@gmail.com"
-    password = f"BGMI{random.randint(1111,9999)}"
-    title = random.choice(["Conqueror", "Ace", "Crown", "Diamond", "Platinum"])
-    outfit = random.choice(["M416 Glacier", "Pharaoh X-Suit", "RP Max", "Ghilli Suit"])
+def gen20(update: Update, context: CallbackContext):
+    update.message.reply_text(generate_data(20))
 
-    return f"""
-👤 UID: {uid}
-🎮 Level: {level}
-📧 Email: {email}
-🔐 Password: {password}
-🏆 Title: {title}
-👕 Outfit: {outfit}
-    """
+def gen50(update: Update, context: CallbackContext):
+    update.message.reply_text(generate_data(50))
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    keyboard = [
-        [InlineKeyboardButton("Generate Free Fire Data", callback_data="ff")],
-        [InlineKeyboardButton("Generate BGMI Data", callback_data="bgmi")],
-        [InlineKeyboardButton("Support", url=SUPPORT_LINK)]
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text("Welcome to Ghost Web Generator Bot 👻\nChoose an option:", reply_markup=reply_markup)
+def gen100(update: Update, context: CallbackContext):
+    update.message.reply_text(generate_data(100))
 
-async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-
-    if query.data == "ff":
-        await query.edit_message_text("Generating Free Fire data...")
-        await query.message.reply_text(generate_ff_data())
-    elif query.data == "bgmi":
-        await query.edit_message_text("Generating BGMI data...")
-        await query.message.reply_text(generate_bgmi_data())
-
-async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Use /start to generate FF or BGMI login data.\nFor help: @GhostzDK")
-
+# 🚀 Main function
 def main():
-    app = ApplicationBuilder().token(TOKEN).build()
+    updater = Updater(TOKEN)
+    dp = updater.dispatcher
 
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("support", help_command))
-    app.add_handler(CommandHandler("help", help_command))
-    app.add_handler(telegram.ext.CallbackQueryHandler(button_handler))
+    # Add handlers
+    dp.add_handler(CommandHandler("start", start))
+    dp.add_handler(CommandHandler("support", support))
+    dp.add_handler(CommandHandler("gen10", gen10))
+    dp.add_handler(CommandHandler("gen20", gen20))
+    dp.add_handler(CommandHandler("gen50", gen50))
+    dp.add_handler(CommandHandler("gen100", gen100))
 
-    print("Bot is running...")
-    app.run_polling()
+    updater.start_polling()
+    updater.idle()
 
 if __name__ == "__main__":
     main()
